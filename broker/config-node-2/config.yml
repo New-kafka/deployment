@@ -1,0 +1,9 @@
+port: 8080
+health_check_path: /healthz
+
+postgres:
+  host: "postgres-broker2"
+  port: 5432
+  user: "postgres"
+  password: "postgres"
+  dbname: "postgres"

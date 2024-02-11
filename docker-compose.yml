@@ -1,0 +1,123 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    container_name: "zookeeper"
+    image: ghcr.io/new-kafka/zookeeper:latest
+    healthcheck:
+      test: curl --fail http://localhost:8000/healthz || exit 1
+      interval: 1m
+      timeout: 30s
+      retries: 3
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres-zookeeper:
+        condition: service_healthy
+    volumes:
+      - ./zookeeper/config:/app/config
+
+  postgres-zookeeper:
+    container_name: "postgres-zookeeper"
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./zookeeper/data:/var/lib/postgresql/data
+      - ./zookeeper/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  broker1:
+    image: ghcr.io/new-kafka/broker:latest
+    container_name: broker1
+    healthcheck:
+      test: curl --fail http://localhost:8080/healthz || exit 1
+      interval: 1m
+      timeout: 30s
+      retries: 5
+    depends_on:
+      postgres-broker1:
+        condition: service_healthy
+    volumes:
+      - ./broker/config-node-1:/app/config
+
+  postgres-broker1:
+    image: postgres:13
+    container_name: "postgres-broker1"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./broker/data1:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  broker2:
+    image: ghcr.io/new-kafka/broker:latest
+    container_name: broker2
+    healthcheck:
+      test: curl --fail http://localhost:8080/healthz || exit 1
+      interval: 1m
+      timeout: 30s
+      retries: 5
+    depends_on:
+      postgres-broker2:
+        condition: service_healthy
+    volumes:
+      - ./broker/config-node-2:/app/config
+
+  postgres-broker2:
+    image: postgres:13
+    container_name: "postgres-broker2"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./broker/data2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  broker3:
+    image: ghcr.io/new-kafka/broker:latest
+    container_name: broker3
+    healthcheck:
+      test: curl --fail http://localhost:8080/healthz || exit 1
+      interval: 1m
+      timeout: 30s
+      retries: 5
+    depends_on:
+      postgres-broker3:
+        condition: service_healthy
+    volumes:
+      - ./broker/config-node-3:/app/config
+
+  postgres-broker3:
+    image: postgres:13
+    container_name: "postgres-broker3"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    volumes:
+      - ./broker/data2:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
